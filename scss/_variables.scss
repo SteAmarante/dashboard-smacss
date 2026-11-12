@@ -1,0 +1,14 @@
+// TODO ETAPA 2: estas variáveis viram tokens em camadas em abstracts/_tokens.scss
+// e o :root passa a ser gerado em base/_root.scss com o prefixo --dsc-.
+:root {
+    --color-bg: #f4f4f9;
+    --color-text-main: #333333;
+    --color-text-light: #666666;
+    --color-primary: #3498db;
+    --color-primary-hover: #2980b9;
+    --color-secondary: #2c3e50;
+    --color-card-bg: #ffffff;
+    --color-border: #cccccc;
+    --color-white: #ffffff;
+
+}

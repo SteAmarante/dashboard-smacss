@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard · SMACSS e Design System</title>
+    <link rel="stylesheet" href="/scss/main.scss">
+</head>
+<body>
+
+    <header class="header">
+        <button class="btn btn--outline header__toggle" type="button" aria-controls="sidebar" aria-expanded="false">Menu</button>
+        <h1 class="header__title">Meu Dashboard</h1>
+        <nav class="header__nav" aria-label="Principal">
+            <ul class="header__list">
+                <li><a href="#" class="header__link">Home</a></li>
+                <li><a href="#" class="header__link">Projetos</a></li>
+                <li><a href="#" class="header__link">Perfil</a></li>
+            </ul>
+        </nav>
+        <button class="btn btn--outline header__theme" type="button" id="alternar-tema">Tema escuro</button>
+    </header>
+
+    <main class="l-dashboard">
+        <aside class="l-dashboard__sidebar sidebar" id="sidebar">
+            <p class="sidebar__title">Navegação</p>
+            <ul class="sidebar__list">
+                <li class="sidebar__item"><a href="#" class="sidebar__link is-ativo">Geral</a></li>
+                <li class="sidebar__item"><a href="#" class="sidebar__link">Configurações</a></li>
+                <li class="sidebar__item"><a href="#" class="sidebar__link">Sair</a></li>
+            </ul>
+        </aside>
+
+        <section class="l-dashboard__content">
+            <h2 class="l-dashboard__title">Meus projetos recentes</h2>
+            <article class="card">
+                <img src="img/projeto.svg" alt="" class="card__image">
+                <h3 class="card__title">Projeto Alpha</h3>
+                <p class="card__description">Portal de atendimento com agendamento online.</p>
+                <a href="#" class="btn btn--primary">Acessar projeto</a>
+            </article>
+            <article class="card">
+                <img src="img/projeto.svg" alt="" class="card__image">
+                <h3 class="card__title">Projeto Beta</h3>
+                <p class="card__description">Painel de indicadores para a equipe de operações.</p>
+                <a href="#" class="btn btn--primary">Acessar projeto</a>
+            </article>
+            <article class="card">
+                <img src="img/projeto.svg" alt="" class="card__image">
+                <h3 class="card__title">Projeto Gama</h3>
+                <p class="card__description">Migração do extrato para a nova arquitetura CSS.</p>
+                <a href="#" class="btn btn--primary">Acessar projeto</a>
+            </article>
+            <article class="card">
+                <img src="img/projeto.svg" alt="" class="card__image">
+                <h3 class="card__title">Projeto Delta</h3>
+                <p class="card__description">Formulário de abertura de conta com validação em tempo real.</p>
+                <a href="#" class="btn btn--primary">Acessar projeto</a>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        // Já pronto: o JS só liga e desliga atributos e classes. Quem decide a aparência é o CSS.
+        const raiz = document.documentElement;
+        const botaoTema = document.getElementById('alternar-tema');
+        botaoTema.addEventListener('click', () => {
+            const escuro = raiz.dataset.tema === 'escuro';
+            raiz.dataset.tema = escuro ? 'claro' : 'escuro';
+            botaoTema.textContent = escuro ? 'Tema escuro' : 'Tema claro';
+        });
+
+        const toggle = document.querySelector('.header__toggle');
+        const sidebar = document.getElementById('sidebar');
+        toggle.addEventListener('click', () => {
+            const aberta = sidebar.classList.toggle('is-aberta');
+            toggle.setAttribute('aria-expanded', aberta);
+        });
+    </script>
+</body>
+</html>

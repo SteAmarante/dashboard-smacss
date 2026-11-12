@@ -1,0 +1,57 @@
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    padding: 15px;
+
+    opacity: 1;
+    transform: translateY(0);
+
+    animation: fadeInUp 0.6s ease-out backwards;
+
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba (0, 0, 0, 0.08);
+    }
+
+    &__image {
+        width: 100%;
+        height: auto;
+        display: block;
+        /* Remove o espaço fantasma abaixo da imagem */
+    }
+
+    &__title {
+        margin-top: 15px;
+        color: var(--color-secondary);
+        font-size: 20px;
+    }
+
+    &__description {
+        margin-top: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: var(--color-text-light);
+        line-height: 1.5;
+    }
+
+    @for $i from 1 through 10 {
+        &:nth-child(#{$i}) {
+            animation-delay: #{$i * 0.1}s;
+        }
+    }
+
+}

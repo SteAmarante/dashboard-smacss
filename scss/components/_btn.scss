@@ -1,0 +1,25 @@
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+
+    transition: background-color 0.3s ease, transform 0.2s ease-out;
+
+    &--primary {
+        background-color: var(--color-primary);
+        color: var(--color-white);
+
+        &:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+        }
+        
+        &:active {
+            transform: translateY(0);
+        }
+
+    }
+}
+

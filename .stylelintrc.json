@@ -1,0 +1,15 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "rules": {
+    "color-no-hex": true,
+    "selector-max-id": 0,
+    "selector-max-compound-selectors": 3,
+    "selector-class-pattern": [
+      "^(l-|is-|theme-)?[a-z][a-z0-9-]*(__[a-z0-9-]+)?(--[a-z0-9-]+)?$",
+      { "resolveNestedSelectors": true, "message": "Use BEM com os prefixos SMACSS (l-, is-, theme-)" }
+    ]
+  },
+  "overrides": [
+    { "files": ["**/abstracts/_tokens.scss"], "rules": { "color-no-hex": null } }
+  ]
+}

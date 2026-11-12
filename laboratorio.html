@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratório Arquitetura CSS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: faixa de abas no topo; cada aba é uma bancada de trabalho com código à esquerda e resultado ao vivo à direita. Paleta Alun Business. */
+:root {
+  --bg: #ecedf0;
+  --surface: #ffffff;
+  --ink: #12141a;
+  --muted: #545a66;
+  --line: #cfd2d8;
+  --brand: #0a1e9d;
+  --brand-2: #4b6afc;
+  --gold: #b8873c;
+  --sand: #e4d7c4;
+  --code-bg: #0d0f14;
+  --code-ink: #e8e9ee;
+  --code-comment: #d1a766;
+  --code-new: rgba(75,106,252,.28);
+  --font-title: Cambria, "Cambria Math", Georgia, "Times New Roman", serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111318; --surface: #1a1d24; --ink: #eceef3; --muted: #a3a9b6; --line: #2e333d;
+  --brand: #8fa2ff; --brand-2: #6f86ff; --gold: #d1a766; --sand: #3a3226; --code-bg: #07080b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111318; --surface: #1a1d24; --ink: #eceef3; --muted: #a3a9b6; --line: #2e333d;
+  --brand: #8fa2ff; --brand-2: #6f86ff; --gold: #d1a766; --sand: #3a3226; --code-bg: #07080b; color-scheme: dark }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-title); font-weight: 400; font-size: clamp(28px, 4vw, 40px); margin: 2px 0 0; text-wrap: balance; }
+h2 { font-family: var(--font-title); font-weight: 400; font-size: 26px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-title); font-weight: 700; font-size: 18px; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.dsc-note { font-size: 13px; color: var(--muted); }
+.dsc-note b { color: var(--gold); }
+
+nav.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 22px; }
+nav.tabs a { text-decoration: none; color: var(--ink); padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 14px; }
+nav.tabs a[aria-current="page"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+:root[data-theme="dark"] nav.tabs a[aria-current="page"] { color: #0b0d12; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) nav.tabs a[aria-current="page"] { color: #0b0d12; } }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+section.view { display: grid; gap: 18px; }
+.intro { display: grid; gap: 6px; }
+.bench { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .bench { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+pre.code { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 8px; padding: 14px 0; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; overflow-x: auto; }
+pre.code .ln { display: block; padding: 0 16px; white-space: pre; border-left: 3px solid transparent; }
+pre.code .ln.new { background: var(--code-new); border-left-color: #4b6afc; animation: entra .5s ease-out; }
+pre.code .c { color: var(--code-comment); }
+@keyframes entra { from { background: rgba(209,167,102,.45); transform: translateX(-6px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { pre.code .ln.new { animation: none; } }
+
+/* SMACSS */
+.cats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 700px) { .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cat { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 10px 12px; cursor: pointer; font: inherit; display: grid; gap: 2px; }
+.cat b { font-family: var(--font-title); font-size: 18px; font-weight: 700; }
+.cat span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.cat[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.wire { display: grid; grid-template-columns: 30% 1fr; grid-template-rows: auto 1fr; gap: 8px; height: 230px; padding: 10px; border-radius: 8px; background: var(--bg); border: 1px dashed var(--line); position: relative; }
+.wire div { border-radius: 6px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; color: var(--muted); padding: 6px 8px; transition: background .25s, border-color .25s, color .25s; }
+.wire .w-menu { grid-row: 1 / 3; }
+.wire .w-cont { display: grid; gap: 6px; align-content: start; }
+.wire .w-mod { height: 34px; }
+.wire .hl { background: var(--brand); border-color: var(--brand); color: #fff; }
+.wire.base-on { background: var(--sand); }
+.wire.theme-on { background: #0d0f14; }
+.wire.theme-on div { background: #1f2933; color: #cfd2d8; border-color: #3a424d; }
+.facts { display: grid; gap: 6px; font-size: 14px; }
+.facts dt { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0 0 6px; }
+
+/* Refatoração */
+.stepper { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--brand); background: var(--brand); color: #fff; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--brand); }
+.btn:disabled { opacity: .4; cursor: default; }
+:root[data-theme="dark"] .btn:not(.ghost) { color: #0b0d12; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn:not(.ghost) { color: #0b0d12; } }
+.dots { display: flex; gap: 6px; }
+.dots button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 600 12px var(--font-body); cursor: pointer; }
+.dots button[aria-current="step"] { background: var(--gold); border-color: var(--gold); color: #fff; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.metric { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.metric small { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.metric strong { font-family: var(--font-mono); font-size: 18px; font-variant-numeric: tabular-nums; }
+.metric.bad strong { color: #c62828; }
+.metric.good strong { color: #1b7f3b; }
+:root[data-theme="dark"] .metric.bad strong { color: #ff8a8a; } :root[data-theme="dark"] .metric.good strong { color: #7ccf98; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .metric.bad strong { color: #ff8a8a; } :root:not([data-theme="light"]) .metric.good strong { color: #7ccf98; } }
+.stage { border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.caption { font-size: 14px; }
+
+/* Tokens */
+.controls { display: grid; gap: 12px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+.seg input { accent-color: var(--brand); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+.row input[type="color"] { width: 44px; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 2px; }
+.row input[type="range"] { accent-color: var(--brand); }
+code { font-family: var(--font-mono); font-size: .92em; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.sw { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11.5px; min-width: 0; }
+.sw i { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
+.sw span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Atividade */
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 700; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+ol, ul.list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.timer { font-family: var(--font-mono); font-size: 44px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+footer { margin-top: 28px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+footer a { color: var(--brand); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Módulo 9 · Aula de conclusão · continuação do Dashboard</div>
+      <h1>Laboratório de arquitetura CSS</h1>
+    </div>
+    <p class="dsc-note"><b>[DSC]</b> Cores e nomes de tokens ilustrativos. No dia a dia, eles vêm do DSC Caixa.</p>
+  </header>
+
+  <nav class="tabs" aria-label="Seções">
+    <a href="#smacss">1 · SMACSS</a>
+    <a href="#refatoracao">2 · Refatoração</a>
+    <a href="#tokens">3 · Tokens e tema</a>
+    <a href="#atividade">4 · Atividade</a>
+  </nav>
+
+  <!-- 1 SMACSS -->
+  <section class="view" id="v-smacss">
+    <div class="intro">
+      <h2>Cada regra tem um papel, e o papel decide o nome e a pasta</h2>
+      <p>Escolha uma categoria para ver onde ela atua no Dashboard da aula passada, qual prefixo usa e o arquivo SCSS que ela ganha.</p>
+    </div>
+    <div class="cats" role="group" aria-label="Categorias SMACSS"></div>
+    <div class="bench">
+      <div class="panel">
+        <div class="panel-title"><h3 id="cat-file">base/_base.scss</h3></div>
+        <pre class="code" id="cat-code"></pre>
+      </div>
+      <div class="panel">
+        <div class="wire" id="wire">
+          <div class="w-menu">.l-dashboard__sidebar<br>.sidebar</div>
+          <div class="w-head">.header</div>
+          <div class="w-cont">
+            <div class="w-mod">.card</div>
+            <div class="w-mod">.btn.btn--primary</div>
+            <div class="w-mod w-state">.sidebar__link.is-ativo</div>
+          </div>
+        </div>
+        <dl class="facts" id="cat-facts"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 Refatoração -->
+  <section class="view" id="v-refatoracao" hidden>
+    <div class="intro">
+      <h2>Do style.css com floats ao Dashboard em SMACSS, um passo de cada vez</h2>
+      <p>O mesmo cartão de projeto em todas as etapas, do starter da aula passada até hoje. Só o CSS muda. Linhas destacadas em azul entraram nesta etapa.</p>
+    </div>
+    <div class="stepper">
+      <button class="btn ghost" id="prev" type="button">Passo anterior</button>
+      <div class="dots" id="dots"></div>
+      <button class="btn" id="next" type="button">Próximo passo</button>
+    </div>
+    <div class="bench">
+      <div class="panel">
+        <div class="panel-title"><h3 id="step-title"></h3></div>
+        <pre class="code" id="step-code"></pre>
+      </div>
+      <div class="panel">
+        <p class="caption" id="step-caption"></p>
+        <div class="metrics">
+          <div class="metric" id="m-spec"><small>Maior especificidade</small><strong></strong></div>
+          <div class="metric" id="m-imp"><small>!important</small><strong></strong></div>
+          <div class="metric" id="m-hex"><small>Cores fixas nos módulos</small><strong></strong></div>
+        </div>
+        <div class="stage" id="ref-stage"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 Tokens -->
+  <section class="view" id="v-tokens" hidden>
+    <div class="intro">
+      <h2>Troque um token e veja todos os componentes mudarem juntos</h2>
+      <p>Este é o Dashboard da aula passada já migrado (o gabarito da atividade), compilado pelo Sass. Nenhum módulo tem cor fixa: tudo vem de <code>var(--dsc-*)</code>. Os botões Menu e Tema escuro dentro da prévia também funcionam.</p>
+    </div>
+    <div class="bench">
+      <div class="panel">
+        <div class="controls">
+          <div>
+            <div class="eyebrow">Tema (camada semântica)</div>
+            <div class="seg" role="radiogroup" aria-label="Tema">
+              <label><input type="radio" name="tema" id="t-claro" value="claro" checked> Claro</label>
+              <label><input type="radio" name="tema" id="t-escuro" value="escuro"> Escuro</label>
+              <label><input type="radio" name="tema" id="t-ac" value="alto-contraste"> Alto contraste</label>
+            </div>
+          </div>
+          <div class="row">
+            <input type="color" id="cor-acao" value="#3498db" aria-label="Cor da ação primária">
+            <label for="cor-acao"><code>--dsc-cor-acao-primaria</code></label>
+          </div>
+          <div class="row">
+            <input type="range" id="raio" min="0" max="24" value="8">
+            <label for="raio"><code>--dsc-raio-m</code>: <span id="raio-v">8px</span></label>
+          </div>
+          <button class="btn ghost" id="reset" type="button">Restaurar tokens</button>
+        </div>
+        <pre class="code" id="tok-code"></pre>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Valores aplicados agora</div>
+          <div class="swatches" id="swatches"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="stage" id="tok-stage"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Atividade -->
+  <section class="view" id="v-atividade" hidden>
+    <div class="intro">
+      <h2>Dashboard SMACSS</h2>
+      <p>Grupos de 4 a 5 pessoas, 30 minutos, nas salas simultâneas. O starter kit é o projeto-final da aula passada (pasta <code>dashboard-smacss</code>), com o HTML e o JavaScript já prontos. Vocês só escrevem SCSS.</p>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Etapas</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Etapa</th><th>Tempo</th><th>O que fazer</th><th>Pronto quando</th></tr></thead>
+          <tbody>
+            <tr><td>1 · Pastas</td><td>7 min</td><td>Mover os partials para <code>abstracts</code>, <code>base</code>, <code>layout</code>, <code>module</code>, <code>state</code> e <code>theme</code>; <code>.dashboard</code> vira <code>.l-dashboard</code></td><td>A página volta a ficar igual à da aula passada</td></tr>
+            <tr><td>2 · Tokens</td><td>8 min</td><td>Trocar <code>--color-*</code> por primitivos e semânticos e gerar <code>--dsc-*</code> no <code>:root</code></td><td>Nenhum módulo tem hex</td></tr>
+            <tr><td>3 · Estados</td><td>7 min</td><td>Sidebar mobile com <code>.is-aberta</code> e link atual com <code>.is-ativo</code></td><td>Em 375px o botão Menu abre e fecha a sidebar</td></tr>
+            <tr><td>4 · Tema</td><td>8 min</td><td>Theme switcher em <code>theme/_escuro.scss</code> e transição global no <code>body</code></td><td>O tema troca sem editar nenhum módulo</td></tr>
+            <tr><td>Bônus</td><td>—</td><td><code>.btn--outline</code> e <code>npm run lint</code></td><td>Lint sem erros (o projeto-final tinha 26)</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <h3>Cronômetro da atividade</h3>
+        <div class="timer" id="timer" aria-live="polite">30:00</div>
+        <div class="stepper">
+          <button class="btn" id="t-start" type="button">Iniciar</button>
+          <button class="btn ghost" id="t-reset" type="button">Zerar</button>
+        </div>
+        <p class="dsc-note" id="t-stage">Etapa 1 · Pastas</p>
+      </div>
+      <div class="panel">
+        <h3>Como abrir o projeto</h3>
+        <ol>
+          <li><b>StackBlitz:</b> em stackblitz.com, crie um projeto Node.js em branco, arraste os arquivos da pasta e rode <code>npm install</code> e <code>npm run dev</code>.</li>
+          <li><b>VS Code local:</b> na pasta do kit, rode <code>npm install</code> e <code>npm run dev</code> e abra <code>http://localhost:5173</code>.</li>
+          <li><b>Sem Node:</b> use a extensão Live Sass Compiler, como na aula passada.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Regras e entrega</h3>
+        <ul class="list">
+          <li><b>BEM continua</b> nos módulos. Modificador <code>--</code> é variação do HTML; estado <code>is-</code> é ligado pelo JavaScript.</li>
+          <li>Dentro dos módulos, só <code>var(--dsc-*)</code>.</li>
+          <li>Estado de módulo fica no arquivo do módulo: <code>.sidebar.is-aberta</code>.</li>
+          <li>Se o botão Menu aparecer no desktop, confira a ordem do <code>module/_index.scss</code>: <code>btn</code> vem antes de <code>header</code>.</li>
+          <li><b>Entrega:</b> link ou .zip, mais dois prints (tema escuro no desktop e sidebar aberta no mobile), no chat geral.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Continuação de CSS3 Avançado: Flexbox, Grid e Animações. Fontes: SNOOK, J. SMACSS (smacss.com); Sass, documentação de @use, @forward e o aviso de depreciação do @import (sass-lang.com); W3C Design Tokens Community Group, formato 2025.10 (designtokens.org); Stylelint, regra color-no-hex (stylelint.io).</span>
+  </footer>
+</div>
+
+<script>
+const KIT_CSS = "* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\nimg {\n  display: block;\n  max-width: 100%;\n}\n\n:host {\n  --dsc-cor-fundo: #f4f4f9;\n  --dsc-cor-superficie: #fff;\n  --dsc-cor-texto: #333;\n  --dsc-cor-texto-suave: #666;\n  --dsc-cor-texto-invertido: #fff;\n  --dsc-cor-borda: #ccc;\n  --dsc-cor-destaque: #2c3e50;\n  --dsc-cor-acao-primaria: #3498db;\n  --dsc-cor-acao-primaria-hover: #2980b9;\n  --dsc-cor-foco: #2980b9;\n  --dsc-espaco-1: 0.25rem;\n  --dsc-espaco-2: 0.5rem;\n  --dsc-espaco-3: 0.75rem;\n  --dsc-espaco-4: 1rem;\n  --dsc-espaco-5: 1.25rem;\n  --dsc-espaco-6: 1.875rem;\n  --dsc-raio-s: 4px;\n  --dsc-raio-m: 8px;\n  --dsc-fonte-base: arial, sans-serif;\n  --dsc-sombra-elevada: 0 10px 20px rgb(0 0 0 / 8%);\n  --dsc-duracao-tema: 0.3s;\n  --dsc-btn-primary-fundo: var(--dsc-cor-acao-primaria);\n  --dsc-btn-primary-texto: var(--dsc-cor-texto-invertido);\n  --dsc-btn-primary-borda: var(--dsc-cor-acao-primaria);\n  --dsc-btn-outline-fundo: transparent;\n  --dsc-btn-outline-texto: currentcolor;\n  --dsc-btn-outline-borda: currentcolor;\n  --dsc-header-fundo: var(--dsc-cor-destaque);\n}\n\n.app {\n  font-family: var(--dsc-fonte-base);\n  background-color: var(--dsc-cor-fundo);\n  color: var(--dsc-cor-texto);\n  transition: background-color var(--dsc-duracao-tema) ease, color var(--dsc-duracao-tema) ease;\n}\n\na {\n  color: var(--dsc-cor-acao-primaria);\n}\n\n.l-dashboard {\n  display: grid;\n  grid-template-columns: 250px 1fr;\n  gap: var(--dsc-espaco-6);\n  align-items: start;\n  max-width: 1200px;\n  margin: var(--dsc-espaco-5) auto;\n  padding: 0 var(--dsc-espaco-5);\n}\n.l-dashboard__content {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));\n  gap: var(--dsc-espaco-5);\n}\n.l-dashboard__title {\n  grid-column: 1/-1;\n  color: var(--dsc-cor-destaque);\n}\n@media (width <= 48em) {\n  .l-dashboard {\n    grid-template-columns: 1fr;\n  }\n}\n\n.btn {\n  display: inline-block;\n  padding: var(--dsc-espaco-3) var(--dsc-espaco-5);\n  border: 2px solid transparent;\n  border-radius: var(--dsc-raio-s);\n  font: inherit;\n  font-weight: bold;\n  text-decoration: none;\n  cursor: pointer;\n  transition: background-color 0.3s ease, transform 0.2s ease-out;\n}\n.btn:hover {\n  transform: translateY(-2px);\n}\n.btn:active {\n  transform: translateY(0);\n}\n.btn:focus-visible {\n  outline: 3px solid var(--dsc-cor-foco);\n  outline-offset: 2px;\n}\n.btn--primary {\n  border-color: var(--dsc-btn-primary-borda);\n  background-color: var(--dsc-btn-primary-fundo);\n  color: var(--dsc-btn-primary-texto);\n}\n.btn--outline {\n  border-color: var(--dsc-btn-outline-borda);\n  background-color: var(--dsc-btn-outline-fundo);\n  color: var(--dsc-btn-outline-texto);\n}\n.btn--primary:hover {\n  background-color: var(--dsc-cor-acao-primaria-hover);\n}\n\n@keyframes fade-in-up {\n  from {\n    opacity: 0;\n    transform: translateY(30px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n.card {\n  padding: var(--dsc-espaco-4);\n  border: 1px solid var(--dsc-cor-borda);\n  border-radius: var(--dsc-raio-m);\n  background-color: var(--dsc-cor-superficie);\n  animation: fade-in-up 0.6s ease-out backwards;\n  transition: transform 0.3s ease, box-shadow 0.3s ease;\n}\n.card:hover {\n  transform: translateY(-5px);\n  box-shadow: var(--dsc-sombra-elevada);\n}\n.card__image {\n  width: 100%;\n  height: auto;\n  border-radius: var(--dsc-raio-s);\n}\n.card__title {\n  margin-top: var(--dsc-espaco-4);\n  font-size: 1.25rem;\n  color: var(--dsc-cor-destaque);\n}\n.card__description {\n  margin: var(--dsc-espaco-3) 0 var(--dsc-espaco-5);\n  font-size: 0.875rem;\n  line-height: 1.5;\n  color: var(--dsc-cor-texto-suave);\n}\n.card:nth-child(1) {\n  animation-delay: 0.1s;\n}\n.card:nth-child(2) {\n  animation-delay: 0.2s;\n}\n.card:nth-child(3) {\n  animation-delay: 0.3s;\n}\n.card:nth-child(4) {\n  animation-delay: 0.4s;\n}\n.card:nth-child(5) {\n  animation-delay: 0.5s;\n}\n.card:nth-child(6) {\n  animation-delay: 0.6s;\n}\n.card:nth-child(7) {\n  animation-delay: 0.7s;\n}\n.card:nth-child(8) {\n  animation-delay: 0.8s;\n}\n.card:nth-child(9) {\n  animation-delay: 0.9s;\n}\n.card:nth-child(10) {\n  animation-delay: 1s;\n}\n@media (prefers-reduced-motion: reduce) {\n  .card {\n    animation: none;\n    transition: none;\n  }\n}\n\n.sidebar {\n  min-height: 400px;\n  padding: var(--dsc-espaco-5);\n  border: 1px solid var(--dsc-cor-borda);\n  background-color: var(--dsc-cor-superficie);\n}\n.sidebar__title {\n  margin-bottom: var(--dsc-espaco-4);\n  font-size: 0.75rem;\n  font-weight: bold;\n  text-transform: uppercase;\n}\n.sidebar__list {\n  list-style: none;\n}\n.sidebar__item {\n  margin-bottom: var(--dsc-espaco-3);\n}\n.sidebar__link {\n  color: var(--dsc-cor-acao-primaria);\n  text-decoration: none;\n}\n.sidebar__link.is-ativo {\n  font-weight: bold;\n  text-decoration: underline;\n}\n@media (width <= 48em) {\n  .sidebar {\n    display: none;\n    min-height: 0;\n  }\n  .sidebar.is-aberta {\n    display: block;\n  }\n}\n\n.header {\n  display: flex;\n  flex-wrap: wrap;\n  gap: var(--dsc-espaco-4);\n  justify-content: space-between;\n  align-items: center;\n  padding: var(--dsc-espaco-5);\n  background-color: var(--dsc-header-fundo);\n  color: var(--dsc-cor-texto-invertido);\n  transition: background-color var(--dsc-duracao-tema) ease;\n}\n.header__title {\n  font-size: 1.5rem;\n}\n.header__list {\n  display: flex;\n  gap: var(--dsc-espaco-5);\n  list-style: none;\n}\n.header__link {\n  color: inherit;\n  text-decoration: none;\n}\n.header__toggle {\n  display: none;\n}\n@media (width <= 48em) {\n  .header__toggle {\n    display: inline-block;\n  }\n  .header__nav {\n    display: none;\n  }\n}\n\n.is-oculto {\n  display: none !important;\n}\n\n:host([data-tema=escuro]) {\n  --dsc-cor-fundo: #121212;\n  --dsc-cor-superficie: #1e1e1e;\n  --dsc-cor-texto: #f4f4f9;\n  --dsc-cor-texto-suave: #ccc;\n  --dsc-cor-borda: #3a3a3a;\n  --dsc-cor-destaque: #85c1e9;\n  --dsc-cor-acao-primaria: #85c1e9;\n  --dsc-cor-acao-primaria-hover: #3498db;\n  --dsc-header-fundo: #1e1e1e;\n  --dsc-btn-primary-texto: #121212;\n}\n\n\n:host([data-tema=alto-contraste]) {\n  --dsc-cor-fundo: #000; --dsc-cor-superficie: #000; --dsc-cor-texto: #fff;\n  --dsc-cor-texto-suave: #fff; --dsc-cor-borda: #fff; --dsc-cor-destaque: #ffd400;\n  --dsc-cor-acao-primaria: #ffd400; --dsc-header-fundo: #000; --dsc-btn-primary-texto: #000;\n}\n.app { min-height: 100%; }\n.l-dashboard { margin: 0; padding: var(--dsc-espaco-4); grid-template-columns: 170px 1fr; gap: var(--dsc-espaco-4); }\n.l-dashboard__content { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); }\n.sidebar { min-height: 0; }\n";
+const KIT_HTML = "<div class=\"app\">\n\n    <header class=\"header\">\n        <button class=\"btn btn--outline header__toggle\" type=\"button\" aria-controls=\"sidebar\" aria-expanded=\"false\">Menu</button>\n        <h1 class=\"header__title\">Meu Dashboard</h1>\n        <nav class=\"header__nav\" aria-label=\"Principal\">\n            <ul class=\"header__list\">\n                <li><a href=\"#\" class=\"header__link\">Home</a></li>\n                <li><a href=\"#\" class=\"header__link\">Projetos</a></li>\n                <li><a href=\"#\" class=\"header__link\">Perfil</a></li>\n            </ul>\n        </nav>\n        <button class=\"btn btn--outline header__theme\" type=\"button\" data-acao=\"tema\">Tema escuro</button>\n    </header>\n\n    <main class=\"l-dashboard\">\n        <aside class=\"l-dashboard__sidebar sidebar\" >\n            <p class=\"sidebar__title\">Navega\u00e7\u00e3o</p>\n            <ul class=\"sidebar__list\">\n                <li class=\"sidebar__item\"><a href=\"#\" class=\"sidebar__link is-ativo\">Geral</a></li>\n                <li class=\"sidebar__item\"><a href=\"#\" class=\"sidebar__link\">Configura\u00e7\u00f5es</a></li>\n                <li class=\"sidebar__item\"><a href=\"#\" class=\"sidebar__link\">Sair</a></li>\n            </ul>\n        </aside>\n\n        <section class=\"l-dashboard__content\">\n            <h2 class=\"l-dashboard__title\">Meus projetos recentes</h2>\n            <article class=\"card\">\n                <img src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22600%22%20height%3D%22300%22%20viewBox%3D%220%200%20600%20300%22%3E%3Crect%20width%3D%22600%22%20height%3D%22300%22%20fill%3D%22%23dfe6ee%22/%3E%3Cpath%20d%3D%22M0%20230%20L150%20140%20L260%20210%20L380%20110%20L600%20240%20L600%20300%20L0%20300%20Z%22%20fill%3D%22%23b9c7d6%22/%3E%3Ccircle%20cx%3D%22470%22%20cy%3D%2280%22%20r%3D%2234%22%20fill%3D%22%23c9d4e0%22/%3E%3C/svg%3E\" alt=\"\" class=\"card__image\">\n                <h3 class=\"card__title\">Projeto Alpha</h3>\n                <p class=\"card__description\">Portal de atendimento com agendamento online.</p>\n                <a href=\"#\" class=\"btn btn--primary\">Acessar projeto</a>\n            </article>\n            <article class=\"card\">\n                <img src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22600%22%20height%3D%22300%22%20viewBox%3D%220%200%20600%20300%22%3E%3Crect%20width%3D%22600%22%20height%3D%22300%22%20fill%3D%22%23dfe6ee%22/%3E%3Cpath%20d%3D%22M0%20230%20L150%20140%20L260%20210%20L380%20110%20L600%20240%20L600%20300%20L0%20300%20Z%22%20fill%3D%22%23b9c7d6%22/%3E%3Ccircle%20cx%3D%22470%22%20cy%3D%2280%22%20r%3D%2234%22%20fill%3D%22%23c9d4e0%22/%3E%3C/svg%3E\" alt=\"\" class=\"card__image\">\n                <h3 class=\"card__title\">Projeto Beta</h3>\n                <p class=\"card__description\">Painel de indicadores para a equipe de opera\u00e7\u00f5es.</p>\n                <a href=\"#\" class=\"btn btn--primary\">Acessar projeto</a>\n            </article>\n            <article class=\"card\">\n                <img src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22600%22%20height%3D%22300%22%20viewBox%3D%220%200%20600%20300%22%3E%3Crect%20width%3D%22600%22%20height%3D%22300%22%20fill%3D%22%23dfe6ee%22/%3E%3Cpath%20d%3D%22M0%20230%20L150%20140%20L260%20210%20L380%20110%20L600%20240%20L600%20300%20L0%20300%20Z%22%20fill%3D%22%23b9c7d6%22/%3E%3Ccircle%20cx%3D%22470%22%20cy%3D%2280%22%20r%3D%2234%22%20fill%3D%22%23c9d4e0%22/%3E%3C/svg%3E\" alt=\"\" class=\"card__image\">\n                <h3 class=\"card__title\">Projeto Gama</h3>\n                <p class=\"card__description\">Migra\u00e7\u00e3o do extrato para a nova arquitetura CSS.</p>\n                <a href=\"#\" class=\"btn btn--primary\">Acessar projeto</a>\n            </article>\n            <article class=\"card\">\n                <img src=\"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22600%22%20height%3D%22300%22%20viewBox%3D%220%200%20600%20300%22%3E%3Crect%20width%3D%22600%22%20height%3D%22300%22%20fill%3D%22%23dfe6ee%22/%3E%3Cpath%20d%3D%22M0%20230%20L150%20140%20L260%20210%20L380%20110%20L600%20240%20L600%20300%20L0%20300%20Z%22%20fill%3D%22%23b9c7d6%22/%3E%3Ccircle%20cx%3D%22470%22%20cy%3D%2280%22%20r%3D%2234%22%20fill%3D%22%23c9d4e0%22/%3E%3C/svg%3E\" alt=\"\" class=\"card__image\">\n                <h3 class=\"card__title\">Projeto Delta</h3>\n                <p class=\"card__description\">Formul\u00e1rio de abertura de conta com valida\u00e7\u00e3o em tempo real.</p>\n                <a href=\"#\" class=\"btn btn--primary\">Acessar projeto</a>\n            </article>\n        </section>\n    </main>\n\n    </div>";
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderCode(el, text, newSet){
+  el.innerHTML = text.split('\n').map((l,i)=>{
+    let h = esc(l);
+    h = h.replace(/(\/\*.*?\*\/|\/\/.*$)/g,'<span class="c">$1</span>');
+    return '<span class="ln'+(newSet && newSet.has(i)?' new':'')+'">'+(h||' ')+'</span>';
+  }).join('');
+}
+
+/* ---------- roteamento por hash ---------- */
+const views = ['smacss','refatoracao','tokens','atividade'];
+function route(){
+  let h = (location.hash||'').slice(1); if(!views.includes(h)) h='smacss';
+  views.forEach(v=>{ document.getElementById('v-'+v).hidden = v!==h; });
+  document.querySelectorAll('nav.tabs a').forEach(a=>{ a.setAttribute('aria-current', a.getAttribute('href')==='#'+h?'page':'false'); });
+}
+addEventListener('hashchange', route); route();
+
+/* ---------- 1 SMACSS ---------- */
+const CATS = [
+  {k:'base', nome:'Base', pre:'sem classes', file:'base/_base.scss (era _base.scss)', wire:'base',
+   papel:'Padrão dos elementos HTML quando nenhum módulo se aplica: o reset e o body da aula passada.', regra:'Só seletores de elemento ou pseudo-classe. Sem classes e sem IDs.',
+   code:"// base/_reset.scss\n* { margin: 0; padding: 0; box-sizing: border-box; }\nimg { display: block; max-width: 100%; }\n\n// base/_base.scss\nbody {\n  font-family: var(--dsc-fonte-base);\n  background-color: var(--dsc-cor-fundo);\n  color: var(--dsc-cor-texto);\n  transition: background-color 0.3s ease, color 0.3s ease;\n}"},
+  {k:'layout', nome:'Layout', pre:'l-', file:'layout/_dashboard.scss (era _layout.scss)', wire:'layout',
+   papel:'O Grid do Dashboard: sidebar fixa, conteúdo fluido e a matriz de cartões com auto-fit.', regra:'Só posição e espaço. Nunca cor, borda ou tipografia.',
+   code:".l-dashboard {\n  display: grid;\n  grid-template-columns: 250px 1fr;\n  gap: var(--dsc-espaco-6);\n\n  &__content {\n    display: grid;\n    grid-template-columns:\n      repeat(auto-fit, minmax(min(300px, 100%), 1fr));\n  }\n\n  @media (width <= 48em) { grid-template-columns: 1fr; }\n}"},
+  {k:'module', nome:'Module', pre:'BEM', file:'module/_card.scss (era components/_card.scss)', wire:'module',
+   papel:'Os blocos BEM da aula passada: header, sidebar, card e btn.', regra:'O BEM não muda. Cores e espaços passam a vir de tokens.',
+   code:".card {\n  padding: var(--dsc-espaco-4);\n  border: 1px solid var(--dsc-cor-borda);\n  background-color: var(--dsc-cor-superficie);\n  animation: fade-in-up 0.6s ease-out backwards;\n\n  &__title       { color: var(--dsc-cor-destaque); }\n  &__description { color: var(--dsc-cor-texto-suave); }\n}"},
+  {k:'state', nome:'State', pre:'is-', file:'module/_sidebar.scss', wire:'state',
+   papel:'O que muda enquanto a pessoa usa a tela: sidebar aberta no mobile, link atual.', regra:'Estado de módulo fica no arquivo do módulo. Modificador -- é outra coisa: variação fixa.',
+   code:".sidebar {\n  @media (width <= 48em) {\n    display: none;\n    &.is-aberta { display: block; }\n  }\n}\n\n.sidebar__link.is-ativo { font-weight: bold; }\n\n// JS: sidebar.classList.toggle('is-aberta');"},
+  {k:'theme', nome:'Theme', pre:'data-tema', file:'theme/_escuro.scss', wire:'theme',
+   papel:'O theme switcher, desafio 1 da aula passada.', regra:'Redefine só tokens semânticos. Nenhum módulo aparece no arquivo.',
+   code:"// antes: body.dark-theme { --color-bg: #121212; }\n[data-tema='escuro'] {\n  --dsc-cor-fundo:      #{cor('grafite-900')};\n  --dsc-cor-superficie: #{cor('grafite-800')};\n  --dsc-cor-texto:      #{cor('cinza-050')};\n  --dsc-header-fundo:   #{cor('grafite-800')};\n}"}
+];
+const catsEl = document.querySelector('.cats');
+CATS.forEach((c,i)=>{
+  const b=document.createElement('button'); b.className='cat'; b.type='button'; b.id='cat-'+c.k;
+  b.innerHTML='<b>'+c.nome+'</b><span>'+c.pre+'</span>'; b.onclick=()=>selCat(i); catsEl.appendChild(b);
+});
+function selCat(i){
+  const c=CATS[i];
+  document.querySelectorAll('.cat').forEach((b,j)=>b.setAttribute('aria-pressed', j===i));
+  document.getElementById('cat-file').textContent=c.file;
+  renderCode(document.getElementById('cat-code'), c.code, new Set());
+  const w=document.getElementById('wire');
+  w.className='wire'; w.querySelectorAll('div').forEach(d=>d.classList.remove('hl'));
+  if(c.wire==='base') w.classList.add('base-on');
+  if(c.wire==='theme') w.classList.add('theme-on');
+  if(c.wire==='layout') w.querySelectorAll('.w-menu,.w-cont').forEach(d=>d.classList.add('hl'));
+  if(c.wire==='module') w.querySelectorAll('.w-mod:not(.w-state)').forEach(d=>d.classList.add('hl'));
+  if(c.wire==='state') w.querySelector('.w-state').classList.add('hl');
+  document.getElementById('cat-facts').innerHTML='<dt>Papel</dt><dd>'+c.papel+'</dd><dt>Regra</dt><dd>'+c.regra+'</dd><dt>Prefixo</dt><dd><code>'+c.pre+'</code></dd>';
+}
+selCat(0);
+
+/* ---------- 2 Refatoração ---------- */
+const DEMO_HTML = `<div class="content"><div class="card-box card">
+<img class="card__image" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 300'%3E%3Crect width='600' height='300' fill='%23dfe6ee'/%3E%3Cpath d='M0 230 L150 140 L260 210 L380 110 L600 240 L600 300 L0 300 Z' fill='%23b9c7d6'/%3E%3C/svg%3E">
+<h3 class="card-title card__title">Projeto Alpha</h3>
+<p class="desc card__description">Portal de atendimento com agendamento online.</p>
+<a href="#" class="btn-blue btn btn--primary">Acessar projeto</a></div></div>`;
+const L = {
+  leg: ["/* css/style.css (starter da aula passada) */",".card-box {","  background-color: white; border: 1px solid #cccccc;","  padding: 15px; width: 48%; display: inline-block;","}",".card-box img { width: 100%; }",".card-title { margin-top: 15px; color: #2c3e50; }",".card-box p.desc {","  margin: 10px 0 20px; font-size: 14px; color: #666666;","}",".btn-blue {","  display: inline-block; padding: 10px 20px;","  background-color: #3498db; color: white;","  text-decoration: none; border-radius: 4px;","}"],
+  bem: ["/* components/_card.scss (BEM) */",".card {","  background-color: #ffffff; border: 1px solid #cccccc;","  padding: 15px;","}",".card__image { width: 100%; display: block; }",".card__title { margin-top: 15px; color: #2c3e50; }",".card__description {","  margin: 10px 0 20px; font-size: 14px; color: #666666;","}",".btn { display: inline-block; padding: 10px 20px;","  text-decoration: none; border-radius: 4px; }",".btn--primary { background-color: #3498db; color: #ffffff; }"],
+  vars: ["/* _variables.scss */",":root {","  --color-primary: #3498db; --color-secondary: #2c3e50;","  --color-text-light: #666666; --color-border: #cccccc;","  --color-card-bg: #ffffff; --color-white: #ffffff;","}"],
+  bemVars: ["/* components/_card.scss e _btn.scss */",".card {","  background-color: var(--color-card-bg);","  border: 1px solid var(--color-border); padding: 15px;","}",".card__image { width: 100%; display: block; }",".card__title { margin-top: 15px; color: var(--color-secondary); }",".card__description { margin: 10px 0 20px; font-size: 14px;","  color: var(--color-text-light); }",".btn { display: inline-block; padding: 10px 20px;","  text-decoration: none; border-radius: 4px; }",".btn--primary { background-color: var(--color-primary);","  color: var(--color-white); }"],
+  folders: ["/* main.scss: pastas SMACSS */","/* @use 'base'; @use 'layout'; @use 'module'; */","/* @use 'state'; @use 'theme'; */"],
+  root: ["/* base/_root.scss (gerado a partir de abstracts/_tokens.scss) */",":root {","  --dsc-cor-acao-primaria: #3498db; --dsc-cor-destaque: #2c3e50;","  --dsc-cor-texto-suave: #666; --dsc-cor-borda: #ccc;","  --dsc-cor-superficie: #fff; --dsc-cor-texto-invertido: #fff;","  --dsc-espaco-3: .75rem; --dsc-espaco-4: 1rem; --dsc-espaco-5: 1.25rem;","  --dsc-raio-s: 4px; --dsc-raio-m: 8px;","}"],
+  mod: ["/* module/_card.scss e module/_btn.scss */",".card {","  background-color: var(--dsc-cor-superficie);","  border: 1px solid var(--dsc-cor-borda);","  border-radius: var(--dsc-raio-m); padding: var(--dsc-espaco-4);","}",".card__image { width: 100%; display: block; }",".card__title { margin-top: var(--dsc-espaco-4); color: var(--dsc-cor-destaque); }",".card__description { margin: var(--dsc-espaco-3) 0 var(--dsc-espaco-5);","  font-size: .875rem; color: var(--dsc-cor-texto-suave); }",".btn { display: inline-block; padding: var(--dsc-espaco-3) var(--dsc-espaco-5);","  text-decoration: none; border-radius: var(--dsc-raio-s); }",".btn--primary { background-color: var(--dsc-cor-acao-primaria);","  color: var(--dsc-cor-texto-invertido); }"],
+  theme: ["/* theme/_escuro.scss */","[data-tema='escuro'] {","  --dsc-cor-superficie: #1e1e1e; --dsc-cor-destaque: #85c1e9;","  --dsc-cor-acao-primaria: #85c1e9; --dsc-cor-texto-invertido: #121212;","  --dsc-cor-texto-suave: #ccc; --dsc-cor-borda: #3a3a3a;","}"]
+};
+const STEPS = [
+  {t:'Passo 0 · Starter da aula passada', cap:'Seletores descendentes, cores fixas e uma largura de 48% para caber dois cartões lado a lado.',
+   parts:['leg']},
+  {t:'Passo 1 · BEM (aula passada)', cap:'Cada parte do cartão ganha sua própria classe. A especificidade cai para uma classe por regra.',
+   parts:['bem'], fresh:['bem']},
+  {t:'Passo 2 · Custom properties (aula passada)', cap:'As cores saem das regras e viram variáveis --color-* em um único lugar.',
+   parts:['vars','bemVars'], fresh:['vars','bemVars']},
+  {t:'Passo 3 · Pastas SMACSS (hoje)', cap:'O CSS não muda: muda onde cada arquivo mora. components/ vira module/, _layout vira layout/.',
+   parts:['folders','vars','bemVars'], fresh:['folders']},
+  {t:'Passo 4 · Tokens --dsc-* (hoje)', cap:'As variáveis ganham papel e escala. O :root é gerado pelo Sass a partir dos tokens.',
+   parts:['folders','root','mod'], fresh:['root','mod']},
+  {t:'Passo 5 · Theme switcher (hoje)', cap:'O tema escuro redefine só tokens. O cartão muda sem que nenhuma linha de módulo seja tocada.',
+   parts:['folders','root','mod','theme'], fresh:['theme'], tema:'escuro'}
+];
+function specOf(sel){
+  sel = sel.replace(/::?[a-z-]+(\([^)]*\))?/g, m=> m.startsWith('::')?' el ':' .p ');
+  const ids=(sel.match(/#[\w-]+/g)||[]).length;
+  const cls=(sel.match(/\.[\w-]+|\[[^\]]+\]/g)||[]).length;
+  const els=(sel.replace(/#[\w-]+|\.[\w-]+|\[[^\]]+\]/g,' ').match(/(^|[\s>+~])([a-z][a-z0-9]*)/g)||[]).length;
+  return [ids,cls,els];
+}
+function analyze(css){
+  let max=[0,0,0];
+  css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/([^{}]+)\{[^}]*\}/g,(m,sels)=>{
+    sels.split(',').forEach(s=>{ s=s.trim(); if(!s||s.startsWith(':root')||s.startsWith('@')) return;
+      const sp=specOf(s); for(let i=0;i<3;i++){ if(sp[i]!==max[i]){ if(sp[i]>max[i]) max=sp; break; } } });
+  });
+  const imp=(css.match(/!important/g)||[]).length;
+  const body=css.replace(/:root\s*\{[\s\S]*?\}/,'');
+  const body2=body.replace(/\[data-tema='escuro'\]\s*\{[\s\S]*?\}/,'');
+  const hex=(body2.match(/#[0-9a-fA-F]{3,6}\b/g)||[]).length + (body2.match(/:\s*white\b/g)||[]).length;
+  return {max, imp, hex};
+}
+const refHost=document.getElementById('ref-stage');
+const refRoot=refHost.attachShadow({mode:'open'});
+let step=0;
+const dots=document.getElementById('dots');
+STEPS.forEach((s,i)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=i; b.setAttribute('aria-label',s.t); b.onclick=()=>go(i); dots.appendChild(b); });
+function go(i){
+  step=Math.max(0,Math.min(STEPS.length-1,i));
+  const s=STEPS[step]; let lines=[], fresh=new Set();
+  s.parts.forEach((p,pi)=>{ if(pi) lines.push(''); const start=lines.length; L[p].forEach(l=>lines.push(l));
+    if((s.fresh||[]).includes(p)) for(let k=start;k<lines.length;k++) fresh.add(k); });
+  const css=lines.join('\n');
+  document.getElementById('step-title').textContent=s.t;
+  document.getElementById('step-caption').textContent=s.cap;
+  renderCode(document.getElementById('step-code'), css, fresh);
+  const a=analyze(css);
+  const set=(id,val,good)=>{const m=document.getElementById(id); m.querySelector('strong').textContent=val; m.className='metric '+(good?'good':'bad');};
+  set('m-spec','('+a.max.join(',')+')', a.max[0]===0 && a.max[1]<=3);
+  set('m-imp', a.imp, a.imp===0);
+  set('m-hex', a.hex, a.hex===0);
+  document.querySelector('#m-hex small').textContent='Cores fixas nos módulos';
+  const applied=css.replace(/\bbody\b/g,':host').replace(/:root/g,':host').replace(/\[data-tema='escuro'\]/g,':host([data-tema=escuro])');
+  if(s.tema) refHost.setAttribute('data-tema',s.tema); else refHost.removeAttribute('data-tema');
+  refRoot.innerHTML='<style>:host{display:block;background:#f4f4f9;padding:14px;font-family:Arial,sans-serif;font-size:14px;color:#333}:host([data-tema=escuro]){background:#121212}.content{max-width:420px}'+applied+'</style>'+DEMO_HTML;
+  dots.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-current', j===step?'step':'false'));
+  document.getElementById('prev').disabled=step===0;
+  document.getElementById('next').disabled=step===STEPS.length-1;
+}
+document.getElementById('prev').onclick=()=>go(step-1);
+document.getElementById('next').onclick=()=>go(step+1);
+go(0);
+
+/* ---------- 3 Tokens ---------- */
+const tokHost=document.getElementById('tok-stage');
+const tokRoot=tokHost.attachShadow({mode:'open'});
+tokRoot.innerHTML='<style>:host{display:block;font-size:13px}'+KIT_CSS+'</style>'+KIT_HTML;
+const temaBtn=tokRoot.querySelector('[data-acao="tema"]');
+function setTema(v){
+  tokHost.setAttribute('data-tema', v);
+  document.getElementById(v==='claro'?'t-claro':v==='escuro'?'t-escuro':'t-ac').checked=true;
+  if(temaBtn) temaBtn.textContent = v==='escuro' ? 'Tema claro' : 'Tema escuro';
+  updTok();
+}
+if(temaBtn) temaBtn.addEventListener('click',()=>setTema(tokHost.getAttribute('data-tema')==='escuro'?'claro':'escuro'));
+const menuBtn=tokRoot.querySelector('.header__toggle'), sideEl=tokRoot.querySelector('.sidebar');
+if(menuBtn&&sideEl) menuBtn.addEventListener('click',()=>{ const ab=sideEl.classList.toggle('is-aberta'); menuBtn.setAttribute('aria-expanded',ab); });
+document.querySelectorAll('input[name="tema"]').forEach(r=>r.addEventListener('change',e=>setTema(e.target.value)));
+const corEl=document.getElementById('cor-acao'), raioEl=document.getElementById('raio');
+corEl.addEventListener('input',()=>{ tokHost.style.setProperty('--dsc-cor-acao-primaria', corEl.value); updTok(); });
+raioEl.addEventListener('input',()=>{ tokHost.style.setProperty('--dsc-raio-m', raioEl.value+'px'); tokHost.style.setProperty('--dsc-raio-l', (raioEl.value*2)+'px'); document.getElementById('raio-v').textContent=raioEl.value+'px'; updTok(); });
+document.getElementById('reset').onclick=()=>{ tokHost.removeAttribute('style'); corEl.value='#3498db'; raioEl.value=8; document.getElementById('raio-v').textContent='8px'; setTema('claro'); };
+const SHOW=['fundo','superficie','texto','texto-suave','texto-invertido','borda','destaque','acao-primaria','acao-primaria-hover','foco'];
+function updTok(){
+  const cs=getComputedStyle(tokRoot.querySelector('.app'));
+  tokRoot.querySelectorAll('.card').forEach(c=>c.style.animation='none');
+  document.getElementById('swatches').innerHTML=SHOW.map(n=>{ const v=cs.getPropertyValue('--dsc-cor-'+n).trim(); return '<div class="sw"><i style="background:'+v+'"></i><span>--dsc-cor-'+n+'</span></div>'; }).join('');
+  const t=tokHost.getAttribute('data-tema')||'claro';
+  const changed=[];
+  if(tokHost.style.getPropertyValue('--dsc-cor-acao-primaria')) changed.push("  --dsc-cor-acao-primaria: "+corEl.value+";");
+  if(tokHost.style.getPropertyValue('--dsc-raio-m')) changed.push("  --dsc-raio-m: "+raioEl.value+"px;");
+  const code = "// O que mudou agora\n"+(t==='claro'?":root":"[data-tema='"+t+"']")+" {\n"+
+    (t==='escuro'?"  --dsc-cor-fundo: #121212;\n  --dsc-cor-superficie: #1e1e1e;\n  --dsc-cor-texto: #f4f4f9;\n  --dsc-header-fundo: #1e1e1e;\n":"")+
+    (t==='alto-contraste'?"  --dsc-cor-fundo: #000;\n  --dsc-cor-texto: #fff;\n  --dsc-cor-acao-primaria: #ffd400;\n":"")+
+    (changed.length?changed.join('\n')+"\n":(t==='claro'?"  /* nenhum token alterado */\n":""))+"}\n\n// Módulos alterados: 0";
+  renderCode(document.getElementById('tok-code'), code, new Set());
+}
+setTema('claro');
+
+/* ---------- 4 Cronômetro ---------- */
+const ETAPAS=[[30,'Etapa 1 · Pastas'],[23,'Etapa 2 · Tokens'],[15,'Etapa 3 · Estados'],[8,'Etapa 4 · Tema']];
+let restante=1800, timer=null;
+function drawT(){ const m=Math.floor(restante/60), s=restante%60; document.getElementById('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const e=ETAPAS.filter(x=>restante<=x[0]*60).pop()||ETAPAS[0]; document.getElementById('t-stage').textContent= restante===0?'Tempo esgotado. Voltem para a sala principal.':e[1]; }
+document.getElementById('t-start').onclick=()=>{ const b=document.getElementById('t-start');
+  if(timer){ clearInterval(timer); timer=null; b.textContent='Continuar'; return; }
+  b.textContent='Pausar'; timer=setInterval(()=>{ restante=Math.max(0,restante-1); drawT(); if(!restante){clearInterval(timer); timer=null; b.textContent='Iniciar';} },1000); };
+document.getElementById('t-reset').onclick=()=>{ clearInterval(timer); timer=null; restante=1800; document.getElementById('t-start').textContent='Iniciar'; drawT(); };
+drawT();
+</script>
+
+</body>
+</html>
